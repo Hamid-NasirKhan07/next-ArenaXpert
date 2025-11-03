@@ -68,11 +68,11 @@ export default function DashboardSignupPage() {
 
           <div className="d-grid gap-2 mb-3">
             <button type="button" className="btn btn-outline-dark" onClick={() => signUpWithProvider('google')}>
-              <img src="/Owner_Dashboard_Assets/img/google.svg" alt="" width="18" height="18" className="me-2" />
+              <img src="/owner-assets/img/google.svg" alt="" width="18" height="18" className="me-2" />
               Continue with Google
             </button>
             <button type="button" className="btn btn-primary" style={{background:'#1877F2', borderColor:'#1877F2'}} onClick={() => signUpWithProvider('facebook')}>
-              <img src="/Owner_Dashboard_Assets/img/facebook.svg" alt="" width="18" height="18" className="me-2" />
+              <img src="/owner-assets/img/facebook.svg" alt="" width="18" height="18" className="me-2" />
               Continue with Facebook
             </button>
           </div>
