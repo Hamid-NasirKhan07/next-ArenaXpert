@@ -1,6 +1,6 @@
 import Book from '../Book'
 import { headers } from 'next/headers'
-import { createClient } from '@/lib/supabase/serverClient'
+import { createClient } from '@/server/supabase/serverClient'
 
 export default async function Page() {
   let arenas = []

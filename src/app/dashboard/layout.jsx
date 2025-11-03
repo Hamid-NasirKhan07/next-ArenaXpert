@@ -23,9 +23,9 @@ export default function DashboardLayout({ children }) {
   // Default layout for authenticated dashboard pages
   return (
     <>
-      {/* Dashboard-only vendor CSS */}
-      <link rel="stylesheet" href="/Owner_Dashboard_Assets/vendor/charts/c3charts/c3.css" />
-      <link rel="stylesheet" href="/Owner_Dashboard_Assets/vendor/charts/chartist-bundle/chartist.css" />
+  {/* Dashboard-only vendor CSS */}
+  <link rel="stylesheet" href="/owner-assets/vendor/charts/c3charts/c3.css" />
+  <link rel="stylesheet" href="/owner-assets/vendor/charts/chartist-bundle/chartist.css" />
       <Guard>
         <div className="container-fluid">
           <div className="row">
@@ -59,11 +59,11 @@ export default function DashboardLayout({ children }) {
         </div>
       </Guard>
       {/* Dashboard-only vendor JS */}
-      <Script src="/Owner_Dashboard_Assets/vendor/jquery/jquery-3.3.1.min.js" strategy="afterInteractive" />
-      <Script src="/Owner_Dashboard_Assets/vendor/charts/chartist-bundle/chartist.min.js" strategy="afterInteractive" />
-      <Script src="/Owner_Dashboard_Assets/vendor/charts/c3charts/d3-5.4.0.min.js" strategy="afterInteractive" />
-      <Script src="/Owner_Dashboard_Assets/vendor/charts/c3charts/c3.min.js" strategy="afterInteractive" />
-      <Script src="/Owner_Dashboard_Assets/vendor/charts/sparkline/jquery.sparkline.js" strategy="afterInteractive" />
+  <Script src="/owner-assets/vendor/jquery/jquery-3.3.1.min.js" strategy="afterInteractive" />
+  <Script src="/owner-assets/vendor/charts/chartist-bundle/chartist.min.js" strategy="afterInteractive" />
+  <Script src="/owner-assets/vendor/charts/c3charts/d3-5.4.0.min.js" strategy="afterInteractive" />
+  <Script src="/owner-assets/vendor/charts/c3charts/c3.min.js" strategy="afterInteractive" />
+  <Script src="/owner-assets/vendor/charts/sparkline/jquery.sparkline.js" strategy="afterInteractive" />
     </>
   )
 }

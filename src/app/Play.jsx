@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { PrismaClient } from '@prisma/client'
 import normalizePlayer from '@/lib/normalizePlayer'
-import { createClient as createSupabaseServerClient } from '@/lib/supabase/serverClient'
+import { createClient as createSupabaseServerClient } from '@/server/supabase/serverClient'
 
 const prisma = new PrismaClient()
 
