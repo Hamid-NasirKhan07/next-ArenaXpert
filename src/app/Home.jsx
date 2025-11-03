@@ -2,7 +2,7 @@ import Hero_Home from '../components/Hero_Home'
 import ArenaGrid from '../components/ArenaGrid'
 import Link from 'next/link'
 import { headers } from 'next/headers'
-import { createClient } from '@/lib/supabase/serverClient'
+import { createClient } from '@/server/supabase/serverClient'
 
 export default async function Home() {
   // Try to read arenas from Supabase first (server-side). Fall back to internal API.

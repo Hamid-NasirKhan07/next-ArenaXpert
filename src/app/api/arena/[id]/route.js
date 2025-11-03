@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import path from 'path'
 import { promises as fs } from 'fs'
-import { createClient } from '@/lib/supabase/serverClient'
+import { createClient } from '@/server/supabase/serverClient'
 
 const prisma = new PrismaClient()
 
