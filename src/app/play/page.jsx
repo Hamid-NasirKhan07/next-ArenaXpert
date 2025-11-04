@@ -1,9 +1,9 @@
 import Link from 'next/link'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import normalizePlayer from '@/lib/normalizePlayer'
 import { createClient as createSupabaseServerClient } from '@/server/supabase/serverClient'
 
-const prisma = new PrismaClient()
+// prisma singleton imported from src/lib/prisma
 
 export default async function Play() {
   // Determine logged-in user server-side via Supabase cookies

@@ -3,7 +3,7 @@ export const runtime = 'nodejs'
 import { NextResponse } from 'next/server'
 import { promises as fs } from 'fs'
 import path from 'path'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { createClient } from '@/server/supabase/serverClient'
 
 const prisma = new PrismaClient()

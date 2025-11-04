@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import path from 'path'
 import { promises as fs } from 'fs'
 import { createClient } from '@/server/supabase/serverClient'
