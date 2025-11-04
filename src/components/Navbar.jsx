@@ -100,19 +100,27 @@ export default function Navbar() {
                       <button
                         type="button"
                         className="btn btn-secondary text-light rounded-pill py-2 px-4 ms-3"
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.preventDefault()
                           try {
                             const el = typeof document !== 'undefined' ? document.getElementById('loginSignupModal') : null
-                            const BootstrapModal = typeof window !== 'undefined' ? window.bootstrap?.Modal : null
+                            const BootstrapModal = typeof window !== 'undefined' ? window.bootstrap?.Modal || (window.bootstrap && window.bootstrap.Modal) : null
                             if (el && BootstrapModal) {
+                              // If bootstrap Modal constructor is available, show modal
                               new BootstrapModal(el).show()
                               return
                             }
                           } catch (err) {
                             // ignore and fallback to navigation
                           }
-                          router.push('/loginmodal')
+
+                          // Try client navigation first, fall back to full page navigation for production environments
+                          try {
+                            await router.push('/loginmodal')
+                          } catch (err) {
+                            // fallback for any router failure
+                            if (typeof window !== 'undefined') window.location.href = '/loginmodal'
+                          }
                         }}
                       >
                         Login / Signup
