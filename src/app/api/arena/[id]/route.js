@@ -4,8 +4,6 @@ import path from 'path'
 import { promises as fs } from 'fs'
 import { createClient } from '@/server/supabase/serverClient'
 
-const prisma = new PrismaClient()
-
 export async function GET(request, { params }) {
   const { id } = await params
 

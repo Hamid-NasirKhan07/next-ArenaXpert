@@ -1,7 +1,5 @@
 import prisma from '@/lib/prisma'
 
-const prisma = new PrismaClient()
-
 export async function GET() {
   try {
     const players = await prisma.players.findMany({ orderBy: { createdAt: 'desc' } })

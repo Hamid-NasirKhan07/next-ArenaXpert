@@ -6,8 +6,6 @@ import path from 'path'
 import prisma from '@/lib/prisma'
 import { createClient } from '@/server/supabase/serverClient'
 
-const prisma = new PrismaClient()
-
 function sanitize(name) {
   return name.replace(/[^a-z0-9.\-_]/gi, '_')
 }
