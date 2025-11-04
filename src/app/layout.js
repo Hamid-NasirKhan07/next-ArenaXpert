@@ -9,7 +9,12 @@ export const metadata = {
   icons: {
     icon: "/img/favicon.ico",
   },
-  viewport: "width=device-width, initial-scale=1.0",
+  // viewport is exported separately for proper Next.js usage
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }) {
