@@ -1,7 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
-import { useParams as useNextParams } from 'next/navigation';
+import React, { useState, useEffect } from 'react'
 
 const styles = {
   containerXxl: {
@@ -127,86 +126,85 @@ const styles = {
   tabPaneActive: {
     display: 'block',
   },
-};
-
-function generateTimeSlots(openingTime, closingTime) {
-  const slots = [];
-  if (!openingTime || !closingTime) return slots;
-
-  const [openHour, openMinute] = openingTime.split(':').map(Number);
-  const [closeHour, closeMinute] = closingTime.split(':').map(Number);
-
-  let start = new Date();
-  start.setHours(openHour, openMinute, 0, 0);
-
-  let end = new Date();
-  end.setHours(closeHour, closeMinute, 0, 0);
-
-  while (start < end) {
-    const slotStart = start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    start.setHours(start.getHours() + 1);
-    const slotEnd = start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    slots.push(`${slotStart} to ${slotEnd}`);
-  }
-  return slots;
 }
 
-export default function Arena() {
-  // Prefer route params from Next (when using app router with dynamic segments).
-  const nextParams = useNextParams ? useNextParams() : null;
-  let id = nextParams && nextParams.id ? nextParams.id : null;
-  const [arena, setArena] = useState(null);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
-  const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
-  // Removed user state and localStorage usage as per request
+function generateTimeSlots(openingTime, closingTime) {
+  const slots = []
+  if (!openingTime || !closingTime) return slots
 
+  const [openHour, openMinute] = openingTime.split(':').map(Number)
+  const [closeHour, closeMinute] = closingTime.split(':').map(Number)
+
+  let start = new Date()
+  start.setHours(openHour, openMinute, 0, 0)
+
+  let end = new Date()
+  end.setHours(closeHour, closeMinute, 0, 0)
+
+  while (start < end) {
+    const slotStart = start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    start.setHours(start.getHours() + 1)
+    const slotEnd = start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    slots.push(`${slotStart} to ${slotEnd}`)
+  }
+  return slots
+}
+
+export default function ArenaClient({ id, initialArena = null }) {
+  const [arena, setArena] = useState(initialArena)
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState('')
+  const [availableTimeSlots, setAvailableTimeSlots] = useState([])
 
   useEffect(() => {
+    let mounted = true
+
     async function fetchArena() {
       try {
-        const response = await fetch(`/api/arena/${id}`);
+        const response = await fetch(`/api/arena/${id}`)
         if (!response.ok) {
-          console.error('Arena not found');
-          return;
+          console.error('Arena not found')
+          return
         }
-        const data = await response.json();
-        setArena(data);
+        const data = await response.json()
+        if (!mounted) return
+        setArena(data)
 
-        // Initialize available time slots with fallback values
-        const openTime = data.arenaDetails?.openingTime || '06:00';
-        const closeTime = data.arenaDetails?.closingTime || '22:00';
-        const slots = generateTimeSlots(openTime, closeTime);
+        const openTime = data.arenaDetails?.openingTime || '06:00'
+        const closeTime = data.arenaDetails?.closingTime || '22:00'
+        const slots = generateTimeSlots(openTime, closeTime)
 
-        // Load booked slots from localStorage
-        const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
-        const bookedSlots = bookings
-          .filter((b) => b.arenaId === id)
-          .map((b) => b.timeSlot);
-
-        // Filter out booked slots
-        const filteredSlots = slots.filter((slot) => !bookedSlots.includes(slot));
-        setAvailableTimeSlots(filteredSlots);
+        const bookings = JSON.parse(localStorage.getItem('bookings')) || []
+        const bookedSlots = bookings.filter((b) => b.arenaId === id).map((b) => b.timeSlot)
+        const filteredSlots = slots.filter((slot) => !bookedSlots.includes(slot))
+        setAvailableTimeSlots(filteredSlots)
       } catch (error) {
-        console.error('Error fetching arena data:', error);
+        console.error('Error fetching arena data:', error)
       }
     }
-    // If id wasn't available from Next params (project may not use app dynamic segments),
-    // fallback to reading from the URL path on the client.
-    if (!id && typeof window !== 'undefined') {
-      const parts = window.location.pathname.split('/').filter(Boolean);
-      id = parts[parts.length - 1];
+
+    // If initialArena wasn't provided by server, fetch on client
+    if (!arena && id) {
+      fetchArena()
+    } else if (arena) {
+      // initialize slots from provided arena
+      const openTime = arena.arenaDetails?.openingTime || '06:00'
+      const closeTime = arena.arenaDetails?.closingTime || '22:00'
+      const slots = generateTimeSlots(openTime, closeTime)
+      const bookings = JSON.parse(localStorage.getItem('bookings')) || []
+      const bookedSlots = bookings.filter((b) => b.arenaId === (arena._id || id)).map((b) => b.timeSlot)
+      const filteredSlots = slots.filter((slot) => !bookedSlots.includes(slot))
+      setAvailableTimeSlots(filteredSlots)
     }
-    if (id) {
-      fetchArena();
-    }
-  }, [id]);
+
+    return () => { mounted = false }
+  }, [id, arena])
 
   if (!arena) {
     return (
       <div>
         <div style={{ marginTop: '10%', textAlign: 'center' }}>Loading arena details...</div>
       </div>
-    );
+    )
   }
 
   return (
@@ -306,18 +304,18 @@ export default function Arena() {
                     style={styles.button}
                     onClick={async () => {
                       if (!selectedTimeSlot) {
-                        alert('Please select a time slot before booking.');
-                        return;
+                        alert('Please select a time slot before booking.')
+                        return
                       }
-                      const storedUser = localStorage.getItem('user');
+                      const storedUser = localStorage.getItem('user')
                       if (!storedUser) {
-                        alert('Please complete your profile information in your Account before booking.');
-                        return;
+                        alert('Please complete your profile information in your Account before booking.')
+                        return
                       }
-                      const user = JSON.parse(storedUser);
+                      const user = JSON.parse(storedUser)
                       if (!user.email) {
-                        alert('Please complete your profile information in your Account before booking.');
-                        return;
+                        alert('Please complete your profile information in your Account before booking.')
+                        return
                       }
                       const newBooking = {
                         arenaId: arena._id,
@@ -330,23 +328,23 @@ export default function Arena() {
                           name: user.name || '',
                           phone: user.phone || '',
                         },
-                      };
+                      }
                       try {
                         const response = await fetch('/api/booking', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify(newBooking),
-                        });
+                        })
                         if (response.ok) {
-                          alert('Booking successful!');
-                          setAvailableTimeSlots(availableTimeSlots.filter((slot) => slot !== selectedTimeSlot));
-                          setSelectedTimeSlot('');
+                          alert('Booking successful!')
+                          setAvailableTimeSlots(availableTimeSlots.filter((slot) => slot !== selectedTimeSlot))
+                          setSelectedTimeSlot('')
                         } else {
-                          const errorData = await response.json();
-                          alert('Booking failed: ' + (errorData.error || JSON.stringify(errorData)));
+                          const errorData = await response.json()
+                          alert('Booking failed: ' + (errorData.error || JSON.stringify(errorData)))
                         }
                       } catch (error) {
-                        alert('Booking failed: ' + error.message);
+                        alert('Booking failed: ' + error.message)
                       }
                     }}
                   >
@@ -497,5 +495,5 @@ export default function Arena() {
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -1,4 +1,4 @@
-import Book from '../Book'
+import Book from './Book'
 import { headers } from 'next/headers'
 import { createClient } from '@/server/supabase/serverClient'
 

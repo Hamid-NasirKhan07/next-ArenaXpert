@@ -1,36 +1,34 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 
-export default function Booking() {
-  const [arenaName, setArenaName] = useState('');
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+export default function BookingClient({ initialBookings = [] }) {
+  const [arenaName, setArenaName] = useState('')
+  const [bookings, setBookings] = useState(initialBookings)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const fetchBookings = async (name) => {
-    setLoading(true);
-    setError('');
+    setLoading(true)
+    setError('')
     try {
-  const response = await fetch(`/api/bookings?arenaName=${encodeURIComponent(name)}`);
+      const response = await fetch(`/api/bookings?arenaName=${encodeURIComponent(name)}`)
       if (response.ok) {
-        const data = await response.json();
-        setBookings(data);
+        const data = await response.json()
+        setBookings(data)
       } else {
-        setError('Failed to fetch bookings.');
+        setError('Failed to fetch bookings.')
       }
     } catch {
-      setError('Error fetching bookings.');
+      setError('Error fetching bookings.')
     }
-    setLoading(false);
-  };
+    setLoading(false)
+  }
 
   const handleSearch = (e) => {
-    e.preventDefault();
-    if (arenaName.trim() !== '') {
-      fetchBookings(arenaName.trim());
-    }
-  };
+    e.preventDefault()
+    if (arenaName.trim() !== '') fetchBookings(arenaName.trim())
+  }
 
   return (
     <div className="container mt-4">
@@ -77,5 +75,5 @@ export default function Booking() {
         !loading && <p>No bookings found for this arena.</p>
       )}
     </div>
-  );
+  )
 }

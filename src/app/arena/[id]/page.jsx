@@ -1,9 +1,15 @@
-"use client"
+import ArenaClient from './ArenaClient'
 
-import React from 'react'
-import Arena from '../../Arena'
+export default async function Page({ params }) {
+  const id = params?.id
+  let initialArena = null
+  try {
+    const base = process.env.NEXT_PUBLIC_BASE_URL || ''
+    const res = await fetch(`${base}/api/arena/${id}`, { cache: 'no-store' })
+    if (res.ok) initialArena = await res.json()
+  } catch (err) {
+    console.error('Failed to fetch arena on server', err)
+  }
 
-export default function Page({ params }) {
-  // Arena component already reads id from next/navigation or window fallback.
-  return <Arena />
+  return <ArenaClient id={id} initialArena={initialArena} />
 }
