@@ -1,12 +1,14 @@
 "use client"
 
 import React, { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient as createSupabaseBrowserClient } from '@/lib/supabase/browserClient'
 
 export default function Navbar() {
   const [user, setUser] = useState(null);
   const supabase = useMemo(() => createSupabaseBrowserClient(), [])
+  const router = useRouter()
 
   useEffect(() => {
     // 1) Seed from localStorage if available
@@ -93,9 +95,28 @@ export default function Navbar() {
                         My Account
                       </Link>
                     ) : (
-                      <Link href="/loginmodal" className="btn btn-secondary text-light rounded-pill py-2 px-4 ms-3" data-bs-toggle="modal" data-bs-target="#loginSignupModal">
+                      // Try opening the modal programmatically. If the modal markup/Bootstrap JS
+                      // isn't available on the current page, fall back to navigating to /loginmodal.
+                      <button
+                        type="button"
+                        className="btn btn-secondary text-light rounded-pill py-2 px-4 ms-3"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          try {
+                            const el = typeof document !== 'undefined' ? document.getElementById('loginSignupModal') : null
+                            const BootstrapModal = typeof window !== 'undefined' ? window.bootstrap?.Modal : null
+                            if (el && BootstrapModal) {
+                              new BootstrapModal(el).show()
+                              return
+                            }
+                          } catch (err) {
+                            // ignore and fallback to navigation
+                          }
+                          router.push('/loginmodal')
+                        }}
+                      >
                         Login / Signup
-                      </Link>
+                      </button>
                     )}
                 </div>
             </nav>
