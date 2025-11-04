@@ -1,6 +1,10 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  // Use the default output so Vercel and other environments find the client
+  // during build: ../node_modules/@prisma/client
+  // Use the safer default internal output folder that Prisma recommends.
+  // This will be available via `import { PrismaClient } from '@prisma/client'`.
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
