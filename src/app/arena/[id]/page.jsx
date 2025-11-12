@@ -1,6 +1,7 @@
 import ArenaClient from './ArenaClient'
 
-export default async function Page({ params }) {
+export default async function Page(props) {
+  const params = await props.params;
   const id = params?.id
   let initialArena = null
   try {

@@ -33,7 +33,8 @@ async function registerPlayer(formData) {
   }
 }
 
-export default async function PlayerPage({ searchParams }) {
+export default async function PlayerPage(props) {
+  const searchParams = await props.searchParams;
   const { success, error, sport } = searchParams || {};
 
   const specialities = {

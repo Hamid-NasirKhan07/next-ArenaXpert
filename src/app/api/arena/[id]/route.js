@@ -6,7 +6,8 @@ import { createClient } from '@/server/supabase/serverClient'
 
 export const runtime = 'nodejs'
 
-export async function GET(request, { params }) {
+export async function GET(request, props) {
+  const params = await props.params;
   const { id } = params || {}
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
 
@@ -130,7 +131,8 @@ export async function GET(request, { params }) {
   return NextResponse.json({ error: 'Arena not found' }, { status: 404 })
 }
 
-export async function DELETE(request, { params }) {
+export async function DELETE(request, props) {
+  const params = await props.params;
   const { id } = params || {}
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
   try {
