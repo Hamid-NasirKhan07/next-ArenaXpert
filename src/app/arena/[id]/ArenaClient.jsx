@@ -193,7 +193,7 @@ export default function ArenaClient({ id, initialArena = null }) {
                         return
                       }
                       const newBooking = {
-                        arenaId: arena._id,
+                        arenaId: arena._id || arena.id || id,
                         arenaName: arena.arenaDetails.arenaName,
                         timeSlot: selectedTimeSlot,
                         date: new Date().toLocaleDateString(),

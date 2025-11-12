@@ -37,7 +37,10 @@ export default async function Account() {
   const protocol = h.get('x-forwarded-proto') || 'https';
   const host = h.get('host') || 'localhost:3000';
   const origin = `${protocol}://${host}`;
-  const bookingsRes = await fetch(`${origin}/api/bookings`, { cache: 'no-store' });
+  const bookingsRes = await fetch(
+    `${origin}/api/bookings?email=${encodeURIComponent(user.email)}`,
+    { cache: 'no-store' }
+  );
   const bookings = bookingsRes.ok ? await bookingsRes.json() : [];
 
   return (

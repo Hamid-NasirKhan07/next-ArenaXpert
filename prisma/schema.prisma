@@ -66,3 +66,17 @@ model OwnerProfile {
   updatedAt      DateTime @updatedAt
   arenas         Arena[]
 }
+
+model Booking {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  phone     String?
+  arenaId   String
+  arenaName String
+  timeSlot  String
+  date      String
+  status    String   @default("Confirmed")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
