@@ -26,6 +26,42 @@ export default function OwnerProfileClient({ initialProfile = null }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [isEditing, setIsEditing] = useState(!initialProfile)
+  const [hasFetchedProfile, setHasFetchedProfile] = useState(false)
+
+  useEffect(() => {
+    if (!hasFetchedProfile) {
+      fetchProfile()
+    }
+  }, [hasFetchedProfile])
+
+  const fetchProfile = async () => {
+    try {
+      const res = await fetch('/api/owner/profile')
+      if (res.ok) {
+        const profile = await res.json()
+        setFirstName(profile.firstName || '')
+        setLastName(profile.lastName || '')
+        setUsername(profile.username || '')
+        setPhone(profile.phone || '')
+        setProvince(profile.province || '')
+        setCity(profile.city || '')
+        setProfileId(profile.id || '')
+        setIsEditing(false)
+      } else if (res.status === 404) {
+        // No profile exists, stay in edit mode
+        setIsEditing(true)
+      } else {
+        // Handle other errors silently, stay in edit mode
+        setIsEditing(true)
+      }
+    } catch (err) {
+      console.error('Failed to fetch profile', err)
+      setIsEditing(true)
+    } finally {
+      setHasFetchedProfile(true)
+    }
+  }
 
   useEffect(() => {
     setCityOptions(province ? provinceCities[province] || [] : [])
@@ -46,11 +82,17 @@ export default function OwnerProfileClient({ initialProfile = null }) {
         body: JSON.stringify(payload),
       })
       const body = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(body.error || 'Failed to save profile')
+      if (!res.ok) {
+        if (res.status === 500) {
+          throw new Error('Database connection error. Please check your environment configuration.')
+        }
+        throw new Error(body.error || 'Failed to save profile')
+      }
 
       setMessage('Profile saved successfully')
       setProfileId(body.id)
-      setTimeout(() => router.push('/dashboard'), 600)
+      setIsEditing(false)
+      // Do not redirect, stay on the same page
     } catch (e) {
       setError(e.message || String(e))
     } finally {
@@ -68,6 +110,69 @@ export default function OwnerProfileClient({ initialProfile = null }) {
     )
   }
 
+  if (profileId && !isEditing) {
+    // Display mode
+    return (
+      <div className="container py-4">
+        <div className="row justify-content-center">
+          <div className="col-lg-8 col-md-10">
+            <div className="card shadow-sm">
+              <div className="card-body p-4">
+                <h4 className="card-title">Owner Profile</h4>
+                <p className="text-muted mb-4">Your profile information.</p>
+
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label className="form-label">First name</label>
+                    <p className="form-control-plaintext">{firstName}</p>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Last name</label>
+                    <p className="form-control-plaintext">{lastName}</p>
+                  </div>
+                </div>
+
+                <div className="row g-3 mt-1">
+                  <div className="col-md-6">
+                    <label className="form-label">Username</label>
+                    <p className="form-control-plaintext">{username}</p>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Phone number</label>
+                    <p className="form-control-plaintext">{phone}</p>
+                  </div>
+                </div>
+
+                <div className="row g-3 mt-1">
+                  <div className="col-md-6">
+                    <label className="form-label">Province</label>
+                    <p className="form-control-plaintext">{province}</p>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">City</label>
+                    <p className="form-control-plaintext">{city}</p>
+                  </div>
+                </div>
+
+                <div className="mt-3">
+                  <label className="form-label">User ID</label>
+                  <p className="form-control-plaintext">{profileId}</p>
+                </div>
+
+                {message && <div className="alert alert-success mt-3">{message}</div>}
+
+                <div className="d-flex gap-2 mt-3">
+                  <button className="btn btn-secondary" onClick={() => setIsEditing(true)}>Edit Profile</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Edit mode
   return (
     <div className="container py-4">
       <div className="row justify-content-center">
@@ -132,6 +237,7 @@ export default function OwnerProfileClient({ initialProfile = null }) {
 
                 <div className="d-flex gap-2 mt-3">
                   <button className="btn btn-primary" type="submit">Save profile</button>
+                  {profileId && <button className="btn btn-secondary" type="button" onClick={() => setIsEditing(false)}>Cancel</button>}
                 </div>
               </form>
             </div>

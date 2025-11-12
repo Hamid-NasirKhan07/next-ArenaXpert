@@ -1,132 +1,8 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
+import styles from './arena.module.css'
 
-const styles = {
-  containerXxl: {
-    maxWidth: '100%',
-    paddingLeft: '15px',
-    paddingRight: '15px',
-    marginLeft: 'auto',
-    marginRight: 'auto',
-    backgroundColor: '#ffffff',
-  },
-  container: {
-    maxWidth: '1140px',
-    marginLeft: 'auto',
-    marginRight: 'auto',
-    paddingLeft: '15px',
-    paddingRight: '15px',
-  },
-  row: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    marginLeft: '-15px',
-    marginRight: '-15px',
-  },
-  colLg6: {
-    position: 'relative',
-    width: '50%',
-    paddingLeft: '15px',
-    paddingRight: '15px',
-  },
-  productDetailsTab: {
-    marginBottom: '47px',
-  },
-  zoomWrapper: {
-    position: 'relative',
-  },
-  singleZoom: {
-    display: 'block',
-  },
-  singleZoomThumb: {
-    marginTop: '20px',
-    width: '100%',
-  },
-  sTabZoom: {
-    display: 'flex',
-    listStyle: 'none',
-    paddingLeft: 0,
-    marginBottom: 0,
-    overflowX: 'auto',
-  },
-  sTabZoomLi: {
-    border: '1px solid #ddd',
-    marginRight: '10px',
-  },
-  productDRight: {
-    textTransform: 'capitalize',
-  },
-  priceBox: {
-    marginBottom: '14px',
-  },
-  currentPrice: {
-    color: '#fd5018',
-    fontSize: '23px',
-    fontWeight: 'bold',
-    marginRight: '10px',
-  },
-  productDesc: {
-    marginBottom: '19px',
-    fontSize: '14px',
-  },
-  productVariantSize: {
-    marginBottom: '30px',
-  },
-  niceselectOption: {
-    marginBottom: '16px',
-    padding: '6px 12px',
-    borderRadius: '4px',
-    border: '1px solid #ccc',
-  },
-  button: {
-    backgroundColor: '#fd5018',
-    color: '#fff',
-    border: 'none',
-    padding: '10px 20px',
-    cursor: 'pointer',
-    borderRadius: '4px',
-  },
-  productDMeta: {
-    marginTop: '20px',
-  },
-  productDInfo: {
-    marginBottom: '50px',
-  },
-  productDInner: {
-    padding: '20px 30px 50px',
-  },
-  productInfoButton: {
-    borderBottom: '1px solid #f0f0f0',
-    marginBottom: '20px',
-  },
-  nav: {
-    display: 'flex',
-    justifyContent: 'center',
-    listStyle: 'none',
-    paddingLeft: 0,
-    marginBottom: 0,
-  },
-  navLi: {
-    marginRight: '25px',
-  },
-  navLink: {
-    display: 'block',
-    color: '#999',
-    textDecoration: 'none',
-    padding: '10px 15px',
-    cursor: 'pointer',
-  },
-  tabContent: {
-    marginTop: '20px',
-  },
-  tabPane: {
-    display: 'none',
-  },
-  tabPaneActive: {
-    display: 'block',
-  },
-}
 
 function generateTimeSlots(openingTime, closingTime) {
   const slots = []
@@ -215,12 +91,12 @@ export default function ArenaClient({ id, initialArena = null }) {
         </div>
       </div>
       <div style={{ marginTop: '10%' }}>
-        <div className="container-xxl bg-white p-0" style={styles.containerXxl}>
-          <div className="container" style={styles.container}>
-            <div className="row" style={styles.row}>
-              <div className="col-lg-6 col-md-6" style={styles.colLg6}>
-                <div style={styles.productDetailsTab}>
-                  <div id="img-1" style={{ ...styles.zoomWrapper, ...styles.singleZoom }}>
+        <div className={`container-xxl bg-white p-0 ${styles['container-xxl'] || ''}`}>
+          <div className={`container ${styles.container || ''}`}>
+            <div className={`row ${styles.row || ''}`}>
+              <div className={`col-lg-6 col-md-6 ${styles['col-lg-6'] || ''}`}>
+                <div className={styles['product-details-tab'] || ''}>
+                  <div id="img-1" className={`${styles['zoom-wrapper'] || ''} ${styles['single-zoom'] || ''}`}>
                     <a href="#">
                       <img
                         style={{ width: '100%', height: '400px', objectFit: 'cover', borderRadius: '8px' }}
@@ -234,13 +110,13 @@ export default function ArenaClient({ id, initialArena = null }) {
                       />
                     </a>
                   </div>
-                  <div style={styles.singleZoomThumb}>
-                    <ul className="s-tab-zoom owl-carousel single-product-active" id="gallery_01" style={styles.sTabZoom}>
+                  <div className={styles['single-zoom-thumb'] || ''}>
+                    <ul className={`s-tab-zoom owl-carousel single-product-active ${styles['s-tab-zoom'] || ''}`} id="gallery_01">
                       {arena.arenaDetails?.images &&
                         arena.arenaDetails.images
                           .slice(0, 4)
                           .map((img, index) => (
-                            <li key={index} style={styles.sTabZoomLi}>
+                            <li key={index}>
                               <a
                                 href="#"
                                 className="elevatezoom-gallery active"
@@ -256,16 +132,16 @@ export default function ArenaClient({ id, initialArena = null }) {
                   </div>
                 </div>
               </div>
-              <div className="col-lg-6 col-md-6" style={styles.productDRight}>
+              <div className={`col-lg-6 col-md-6 ${styles['product-d-right'] || ''}`}>
                 <div>
                   <h1>{arena.arenaDetails?.arenaName || 'Arena'}</h1>
-                  <div style={styles.priceBox}>
-                    <span style={styles.currentPrice}>Rs {arena.arenaDetails?.price || 0}/hr</span>
+                  <div className={styles['price-box'] || ''}>
+                    <span className={styles['current-price'] || ''}>Rs {arena.arenaDetails?.price || 0}/hr</span>
                   </div>
-                  <div style={styles.productDesc}>
+                  <div className={styles['product-desc'] || ''}>
                     <p>{arena.arenaDetails?.description || 'No description available.'}</p>
                   </div>
-                  <div style={styles.productDMeta}>
+                  <div className={styles['product-d-meta'] || ''}>
                     <p><strong>Address:</strong> {arena.arenaDetails?.address || 'N/A'}</p>
                     <p>
                       <strong>Categories:</strong>{' '}
@@ -282,13 +158,12 @@ export default function ArenaClient({ id, initialArena = null }) {
                       <strong>Timing:</strong> {arena.arenaDetails?.openingTime || '06:00'} - {arena.arenaDetails?.closingTime || '22:00'}
                     </p>
                   </div>
-                  <div className="product_variant size" style={styles.productVariantSize}>
+                  <div className={`product_variant size ${styles['product-variant-size'] || ''}`}>
                     <label><strong>Select Time Slot:</strong></label>
                     <select
-                      className="niceselect_option ml-2"
                       id="timeSlots"
                       name="timeSlots"
-                      style={styles.niceselectOption}
+                      className={`niceselect_option ml-2 ${styles['niceselect-option'] || ''}`}
                       value={selectedTimeSlot}
                       onChange={(e) => setSelectedTimeSlot(e.target.value)}
                     >
@@ -301,7 +176,7 @@ export default function ArenaClient({ id, initialArena = null }) {
                     </select>
                   </div>
                   <button
-                    style={styles.button}
+                    className={styles.button || ''}
                     onClick={async () => {
                       if (!selectedTimeSlot) {
                         alert('Please select a time slot before booking.')
@@ -355,60 +230,59 @@ export default function ArenaClient({ id, initialArena = null }) {
             </div>
           </div>
         </div>
-        <div style={styles.productDInfo}>
-          <div className="container" style={styles.container}>
-            <div className="row" style={styles.row}>
+        <div className={styles['product-d-info'] || ''}>
+          <div className={`container ${styles.container || ''}`}>
+            <div className={`row ${styles.row || ''}`}>
               <div className="col-12">
-                <div style={styles.productDInner}>
-                  <div style={styles.productInfoButton}>
-                    <ul className="nav" role="tablist" style={styles.nav}>
-                      <li style={styles.navLi}>
+                <div className={styles['product-d-inner'] || ''}>
+                  <div className={styles['product-info-button'] || ''}>
+                    <ul className={`nav ${styles.nav || ''}`} role="tablist">
+                      <li>
                         <a
-                          className="active"
                           data-toggle="tab"
                           href="#info"
                           role="tab"
                           aria-controls="info"
                           aria-selected="false"
-                          style={styles.navLink}
+                          className={`active ${styles['nav-link'] || ''}`}
                         >
                           Description
                         </a>
                       </li>
-                      <li style={styles.navLi}>
+                      <li>
                         <a
                           data-toggle="tab"
                           href="#sheet"
                           role="tab"
                           aria-controls="sheet"
                           aria-selected="false"
-                          style={styles.navLink}
+                          className={styles['nav-link'] || ''}
                         >
                           Specification
                         </a>
                       </li>
-                      <li style={styles.navLi}>
+                      <li>
                         <a
                           data-toggle="tab"
                           href="#reviews"
                           role="tab"
                           aria-controls="reviews"
                           aria-selected="false"
-                          style={styles.navLink}
+                          className={styles['nav-link'] || ''}
                         >
                           Reviews (1)
                         </a>
                       </li>
                     </ul>
                   </div>
-                  <div className="tab-content" style={styles.tabContent}>
-                    <div className="tab-pane fade show active" id="info" role="tabpanel" style={styles.tabPaneActive}>
-                      <div style={styles.productInfoContent}>
+                  <div className={`tab-content ${styles['tab-content'] || ''}`}>
+                    <div className={`tab-pane fade show active ${styles['tab-pane'] || ''}`} id="info" role="tabpanel">
+                      <div>
                         <p>{arena.arenaDetails?.description || 'No description available.'}</p>
                       </div>
                     </div>
-                    <div className="tab-pane fade" id="sheet" role="tabpanel" style={styles.tabPane}>
-                      <div style={styles.productDTable}>
+                    <div className={`tab-pane fade ${styles['tab-pane'] || ''}`} id="sheet" role="tabpanel">
+                      <div>
                         <form action="#">
                           <table>
                             <tbody>
@@ -440,19 +314,19 @@ export default function ArenaClient({ id, initialArena = null }) {
                           </table>
                         </form>
                       </div>
-                      <div style={styles.productInfoContent}>
+                      <div>
                         <p>{arena.arenaDetails?.description || 'No description available.'}</p>
                       </div>
                     </div>
-                    <div className="tab-pane fade" id="reviews" role="tabpanel" style={styles.tabPane}>
-                      <div style={styles.reviewsWrapper}>
+                    <div className={`tab-pane fade ${styles['tab-pane'] || ''}`} id="reviews" role="tabpanel">
+                      <div>
                         <h2>1 review for Management</h2>
-                        <div style={styles.reviewsCommentBox}>
-                          <div style={styles.commentThmb}>
+                        <div>
+                          <div>
                             <img src="assets/img/blog/comment2.jpg" alt="" />
                           </div>
-                          <div style={styles.commentText}>
-                            <div style={styles.reviewsMeta}>
+                          <div>
+                            <div>
                               <p>
                                 <strong>Muzammal </strong>- May 2, 2025
                               </p>
@@ -464,23 +338,23 @@ export default function ArenaClient({ id, initialArena = null }) {
                           <h2>Add a review </h2>
                           <p>Your email address will not be published. Required fields are marked </p>
                         </div>
-                        <div style={styles.productReviewForm}>
+                        <div>
                           <form action="#">
                             <div className="row">
                               <div className="col-12">
                                 <label htmlFor="review_comment">Your review </label>
-                                <textarea name="comment" id="review_comment" style={styles.productReviewFormTextarea}></textarea>
+                                <textarea name="comment" id="review_comment"></textarea>
                               </div>
                               <div className="col-lg-6 col-md-6">
                                 <label htmlFor="author">Name</label>
-                                <input id="author" type="text" style={styles.productReviewFormInput} />
+                                <input id="author" type="text" />
                               </div>
                               <div className="col-lg-6 col-md-6">
                                 <label htmlFor="email">Email </label>
-                                <input id="email" type="text" style={styles.productReviewFormInput} />
+                                <input id="email" type="text" />
                               </div>
                             </div>
-                            <button type="submit" style={styles.productReviewFormButton}>
+                            <button type="submit">
                               Submit
                             </button>
                           </form>

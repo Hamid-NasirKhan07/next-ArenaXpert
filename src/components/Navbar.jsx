@@ -116,10 +116,10 @@ export default function Navbar() {
 
                           // Try client navigation first, fall back to full page navigation for production environments
                           try {
-                            await router.push('/loginmodal')
+                            await router.push('/login')
                           } catch (err) {
                             // fallback for any router failure
-                            if (typeof window !== 'undefined') window.location.href = '/loginmodal'
+                            if (typeof window !== 'undefined') window.location.href = '/login'
                           }
                         }}
                       >

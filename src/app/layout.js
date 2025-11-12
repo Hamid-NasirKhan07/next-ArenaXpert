@@ -20,7 +20,7 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
+      <body suppressHydrationWarning={true}>
         <SiteChrome>{children}</SiteChrome>
       </body>
     </html>

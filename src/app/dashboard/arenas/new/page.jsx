@@ -1,181 +1,153 @@
-"use client"
+import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
+import { createClient } from '@/server/supabase/serverClient'
 
-import { useState, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+// SERVER ACTION
+async function addArenaAction(formData) {
+  'use server'
 
-export default function AddArenaPage() {
-  const router = useRouter()
+  const supabase = await createClient()
 
-  const [arenaName, setArenaName] = useState('')
-  const [price, setPrice] = useState('')
-  const [phoneNumber, setPhoneNumber] = useState('')
-  const [address, setAddress] = useState('')
-  const [length, setLength] = useState('')
-  const [width, setWidth] = useState('')
-  const [height, setHeight] = useState('')
-  const [openingTime, setOpeningTime] = useState('')
-  const [closingTime, setClosingTime] = useState('')
-  const [categories, setCategories] = useState({ cricket: false, football: false, badminton: false })
-  const [description, setDescription] = useState('')
-  const [files, setFiles] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const timeToMinutes = useMemo(() => (t) => {
-    if (!t) return null
-    const [h, m] = t.split(':').map((x) => parseInt(x, 10))
-    if (Number.isNaN(h) || Number.isNaN(m)) return null
-    return h * 60 + m
-  }, [])
+  const arenaName = formData.get('arenaName')
+  const price = Number(formData.get('price') || 0)
+  const phoneNumber = formData.get('phoneNumber')
+  const address = formData.get('address')
+  const length = Number(formData.get('length') || 0)
+  const width = Number(formData.get('width') || 0)
+  const height = Number(formData.get('height') || 0)
+  const openingTime = formData.get('openingTime')
+  const closingTime = formData.get('closingTime')
+  const description = formData.get('description')
+  const categories = formData.getAll('categories')
 
-  const handleFiles = (e) => {
-    setFiles(Array.from(e.target.files || []))
-  }
+  const files = formData.getAll('files')
+  const imageUrls = []
 
-  async function uploadFilesLocally() {
-    if (!files || files.length === 0) return []
-    const form = new FormData()
-    for (const f of files) form.append('files', f)
-    const res = await fetch('/api/uploads/arena', { method: 'POST', body: form })
-    const body = await res.json().catch(() => ({}))
-    if (!res.ok) throw new Error(body.error || 'Failed to upload images')
-    return body.urls || []
-  }
-
-  const onSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-
-    try {
-  const imageUrls = await uploadFilesLocally()
-
-      // Validate time (24h) closing > opening
-      const oMin = timeToMinutes(openingTime)
-      const cMin = timeToMinutes(closingTime)
-      if (oMin == null || cMin == null || cMin <= oMin) {
-        throw new Error('Closing time must be greater than opening time (24h format HH:MM).')
-      }
-
-      const selectedCategories = Object.entries(categories)
-        .filter(([, v]) => v)
-        .map(([k]) => k)
-
-      const arenaDetails = {
-        arenaName,
-        phoneNumber,
-        address,
-        length: Number(length) || 0,
-        width: Number(width) || 0,
-        height: Number(height) || 0,
-        price: price ? Number(price) : 0,
-        openingTime,
-        closingTime,
-        description,
-        categories: selectedCategories,
-        arenaImageUrls: imageUrls,
-        images: imageUrls,
-      }
-
-      const res = await fetch('/api/arenas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ arenaDetails }),
+  // Upload each image to Supabase Storage
+  for (const file of files) {
+    if (!file || typeof file === 'string') continue
+    const { data, error } = await supabase.storage
+      .from('arena-images')
+      .upload(`public/${Date.now()}-${file.name}`, file, {
+        cacheControl: '3600',
+        upsert: false,
       })
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        throw new Error(body.error || 'Failed to create arena')
-      }
-
-      // On success redirect back to arenas list
-      router.push('/dashboard/arenas')
-    } catch (err) {
-      console.error(err)
-      setError(err.message || String(err))
-    } finally {
-      setLoading(false)
-    }
+    if (error) throw new Error(error.message)
+    const { data: urlData } = supabase.storage
+      .from('arena-images')
+      .getPublicUrl(data.path)
+    imageUrls.push(urlData.publicUrl)
   }
 
+  // Validate time
+  const [oh, om] = openingTime.split(':').map(Number)
+  const [ch, cm] = closingTime.split(':').map(Number)
+  const oMin = oh * 60 + om
+  const cMin = ch * 60 + cm
+  if (cMin <= oMin) throw new Error('Closing time must be after opening time')
+
+  // Save data to Supabase DB
+  const { error } = await supabase.from('arenas').insert([
+    {
+      arena_name: arenaName,
+      price,
+      phone_number: phoneNumber,
+      address,
+      length,
+      width,
+      height,
+      opening_time: openingTime,
+      closing_time: closingTime,
+      description,
+      categories,
+      images: imageUrls,
+    },
+  ])
+  if (error) throw new Error(error.message)
+
+  // Revalidate and redirect
+  revalidatePath('/dashboard/arenas')
+  redirect('/dashboard/arenas')
+}
+
+export default async function AddArenaPage() {
   return (
     <div className="card shadow-sm">
       <div className="card-body">
         <h5 className="card-title">Add Arena</h5>
-        <form onSubmit={onSubmit}>
+
+        <form action={addArenaAction}>
           <div className="mb-3">
             <label className="form-label">Arena Name</label>
-            <input className="form-control" value={arenaName} onChange={(e) => setArenaName(e.target.value)} required />
+            <input className="form-control" name="arenaName" required />
           </div>
 
           <div className="mb-3">
             <label className="form-label">Price (per hour)</label>
-            <input type="number" className="form-control" value={price} onChange={(e) => setPrice(e.target.value)} />
+            <input type="number" className="form-control" name="price" />
           </div>
 
           <div className="mb-3">
             <label className="form-label">Contact</label>
-            <input className="form-control mb-2" placeholder="Phone number" value={phoneNumber} onChange={(e)=>setPhoneNumber(e.target.value)} required />
-            <input className="form-control" placeholder="Address" value={address} onChange={(e)=>setAddress(e.target.value)} required />
+            <input className="form-control mb-2" placeholder="Phone number" name="phoneNumber" required />
+            <input className="form-control" placeholder="Address" name="address" required />
           </div>
 
           <div className="row g-3">
             <div className="col-md-4">
               <label className="form-label">Length (feet)</label>
-              <input type="number" className="form-control" value={length} onChange={(e)=>setLength(e.target.value)} />
+              <input type="number" className="form-control" name="length" />
             </div>
             <div className="col-md-4">
               <label className="form-label">Width (feet)</label>
-              <input type="number" className="form-control" value={width} onChange={(e)=>setWidth(e.target.value)} />
+              <input type="number" className="form-control" name="width" />
             </div>
             <div className="col-md-4">
               <label className="form-label">Height (feet)</label>
-              <input type="number" className="form-control" value={height} onChange={(e)=>setHeight(e.target.value)} />
+              <input type="number" className="form-control" name="height" />
             </div>
           </div>
 
           <div className="row g-3 mt-1">
             <div className="col-md-6">
               <label className="form-label">Opening Time</label>
-              <input type="time" className="form-control" value={openingTime} onChange={(e)=>setOpeningTime(e.target.value)} required />
+              <input type="time" className="form-control" name="openingTime" required />
             </div>
             <div className="col-md-6">
               <label className="form-label">Closing Time</label>
-              <input type="time" className="form-control" value={closingTime} onChange={(e)=>setClosingTime(e.target.value)} required />
+              <input type="time" className="form-control" name="closingTime" required />
             </div>
           </div>
 
           <div className="mb-2 mt-2">
             <label className="form-label">Categories</label>
             <div className="form-check">
-              <input className="form-check-input" type="checkbox" id="catCricket" checked={categories.cricket} onChange={(e)=>setCategories((c)=>({...c, cricket: e.target.checked}))} />
+              <input className="form-check-input" type="checkbox" name="categories" value="cricket" id="catCricket" />
               <label className="form-check-label" htmlFor="catCricket">Cricket</label>
             </div>
             <div className="form-check">
-              <input className="form-check-input" type="checkbox" id="catFootball" checked={categories.football} onChange={(e)=>setCategories((c)=>({...c, football: e.target.checked}))} />
+              <input className="form-check-input" type="checkbox" name="categories" value="football" id="catFootball" />
               <label className="form-check-label" htmlFor="catFootball">Football</label>
             </div>
             <div className="form-check">
-              <input className="form-check-input" type="checkbox" id="catBadminton" checked={categories.badminton} onChange={(e)=>setCategories((c)=>({...c, badminton: e.target.checked}))} />
+              <input className="form-check-input" type="checkbox" name="categories" value="badminton" id="catBadminton" />
               <label className="form-check-label" htmlFor="catBadminton">Badminton</label>
             </div>
           </div>
 
           <div className="mb-3">
             <label className="form-label">Description</label>
-            <textarea className="form-control" rows={4} value={description} onChange={(e) => setDescription(e.target.value)} />
+            <textarea className="form-control" rows={4} name="description" />
           </div>
 
           <div className="mb-3">
             <label className="form-label">Images</label>
-            <input className="form-control" type="file" accept="image/*" multiple onChange={handleFiles} />
-            <small className="form-text text-muted">Upload one or more images for the arena.</small>
+            <input className="form-control" type="file" accept="image/*" multiple name="files" />
           </div>
 
-          {error && <div className="alert alert-danger">{error}</div>}
-
           <div className="d-flex gap-2">
-            <button className="btn btn-primary" type="submit" disabled={loading}>{loading ? 'Saving…' : 'Create Arena'}</button>
-            <button type="button" className="btn btn-secondary" onClick={() => router.back()} disabled={loading}>Cancel</button>
+            <button className="btn btn-primary" type="submit">Create Arena</button>
+            <a href="/dashboard/arenas" className="btn btn-secondary">Cancel</a>
           </div>
         </form>
       </div>

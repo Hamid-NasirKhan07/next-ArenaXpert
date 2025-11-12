@@ -4,8 +4,22 @@ import { createClient } from '@/server/supabase/serverClient'
 
 export async function GET() {
   try {
-  const supabase = await createClient()
-    const { data } = await supabase.auth.getUser()
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.error('Supabase environment variables are missing')
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+    }
+
+    const supabase = await createClient()
+    if (!supabase || !supabase.auth) {
+      console.error('Failed to create Supabase client or auth is undefined')
+      return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    }
+
+    const { data, error } = await supabase.auth.getUser()
+    if (error) {
+      console.error('Supabase auth error:', error)
+      return NextResponse.json({ error: 'Authentication error' }, { status: 401 })
+    }
     const user = data?.user
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -21,7 +35,7 @@ export async function GET() {
 
 export async function POST(request) {
   try {
-  const supabase = await createClient()
+    const supabase = await createClient()
     const { data } = await supabase.auth.getUser()
     const user = data?.user
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -52,7 +66,7 @@ export async function POST(request) {
 
 export async function PUT(request) {
   try {
-  const supabase = await createClient()
+    const supabase = await createClient()
     const { data } = await supabase.auth.getUser()
     const user = data?.user
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

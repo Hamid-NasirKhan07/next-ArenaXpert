@@ -24,8 +24,8 @@ export default function DashboardLayout({ children }) {
   return (
     <>
   {/* Dashboard-only vendor CSS */}
-  <link rel="stylesheet" href="/owner-assets/vendor/charts/c3charts/c3.css" />
-  <link rel="stylesheet" href="/owner-assets/vendor/charts/chartist-bundle/chartist.css" />
+  {/* <link rel="stylesheet" href="/owner-assets/vendor/charts/c3charts/c3.css" /> */}
+  {/* <link rel="stylesheet" href="/owner-assets/vendor/charts/chartist-bundle/chartist.css" /> */}
       <Guard>
         <div className="container-fluid">
           <div className="row">

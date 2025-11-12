@@ -1,9 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  // Use the default output so Vercel and other environments find the client
-  // during build: ../node_modules/@prisma/client
-  // Use the safer default internal output folder that Prisma recommends.
-  // This will be available via `import { PrismaClient } from '@prisma/client'`.
   output   = "../node_modules/.prisma/client"
 }
 
@@ -13,37 +9,37 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  phone     String?
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  phone        String?
   passwordHash String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model Players {
-  id             String   @id @default(cuid())
-  email          String   @unique
-  sport          String?
-  displayName    String?
-  speciality     String?
-  description    String?
-  contactNumber  String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id            String   @id @default(cuid())
+  email         String   @unique
+  sport         String?
+  displayName   String?
+  speciality    String?
+  description   String?
+  contactNumber String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Arena {
-  id        String   @id @default(cuid())
-  name      String?
-  location  String?
-  sport     String?
-  arenaDetails Json?
+  id             String        @id @default(cuid())
+  name           String?
+  location       String?
+  sport          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  arenaDetails   Json?
   ownerProfileId String?
   ownerProfile   OwnerProfile? @relation(fields: [ownerProfileId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model Contact {
@@ -52,13 +48,13 @@ model Contact {
   email     String
   phone     String
   message   String
-  status    String   @default("pending") // pending, resolved, closed
+  status    String   @default("pending")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model OwnerProfile {
-  id             String   @id @default(cuid()) // acts as userId visible to owners
+  id             String   @id @default(cuid())
   supabaseUserId String   @unique
   firstName      String
   lastName       String

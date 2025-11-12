@@ -24,7 +24,7 @@ export default async function Play() {
         <div className="container-xxl py-5 bg-primary hero-header mb-5">
           <div className="container my-5 py-5 px-lg-5 text-center text-white">
             <h1 className="animated zoomIn">Please Login or Sign Up</h1>
-            <Link href="/loginmodal">
+            <Link href="/login">
               <button className="btn btn-light me-2">Login / Sign Up</button>
             </Link>
           </div>
