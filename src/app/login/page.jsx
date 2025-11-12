@@ -1,30 +1,9 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
-import { createClient } from '@/server/supabase/serverClient'
+import { loginAction } from './actions'
 
 export const metadata = { title: 'Login | ArenaXpert' }
 
-// ✅ Server Action for login
-export async function loginAction(formData) {
-  'use server'
-
-  const email = formData.get('email')
-  const password = formData.get('password')
-
-  const supabase = createClient()
-
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  })
-
-  if (error) {
-    redirect('/login?error=' + encodeURIComponent(error.message))
-  }
-
-  // ✅ Successful login
-  redirect('/')
-}
+// Server action is moved to `./actions` to avoid exporting invalid Page fields
 
 // ✅ Login Page Component
 export default async function LoginPage({ searchParams }) {
