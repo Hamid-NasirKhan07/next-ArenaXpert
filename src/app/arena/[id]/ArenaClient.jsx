@@ -188,7 +188,7 @@ export default function ArenaClient({ id, initialArena = null }) {
                       onChange={(e) => setSelectedDate(e.target.value)}
                       style={{ marginBottom: '10px', padding: '6px', display: 'block' }}
                     />
-                    <label><strong>Select Time Slot:</strong></label>
+                    <label><strong>Select Time Slot:</strong></label><br/>
                     <select
                       id="timeSlots"
                       name="timeSlots"
@@ -353,7 +353,7 @@ export default function ArenaClient({ id, initialArena = null }) {
                         <h2>1 review for Management</h2>
                         <div>
                           <div>
-                            <img src="assets/img/blog/comment2.jpg" alt="" />
+                            <img src="/img/testimonial-2.jpg" alt="" />
                           </div>
                           <div>
                             <div>

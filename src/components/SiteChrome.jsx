@@ -4,7 +4,7 @@ import Navbar from './Navbar'
 import FullScreen_Search from './FullScreen_Search'
 import Footer from './Footer'
 import BackToTop from './BackToTop'
-import ClientScripts from './ClientScripts'
+// ClientScripts no longer used for script loading; scripts are included in `app/layout.js`
 
 export default function SiteChrome({ children }) {
   const pathname = usePathname()
@@ -22,7 +22,6 @@ export default function SiteChrome({ children }) {
       <main>{children}</main>
       <Footer />
       <BackToTop />
-      <ClientScripts />
     </>
   )
 }

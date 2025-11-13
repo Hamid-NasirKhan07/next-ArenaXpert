@@ -1,12 +1,33 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/server/supabase/serverClient'
+import prisma from '@/lib/prisma'
+import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 
 // SERVER ACTION
 async function addArenaAction(formData) {
   'use server'
 
   const supabase = await createClient()
+
+  // Create an admin Supabase client using the service role key for server-only operations
+  // resolve authenticated user early so we can attach ownerProfileId on inserts
+  const { data: authData } = await supabase.auth.getUser()
+  const currentUser = authData?.user
+  let ownerProfileId = null
+  if (currentUser) {
+    const owner = await prisma.ownerProfile.findUnique({ where: { supabaseUserId: currentUser.id } })
+    if (owner) ownerProfileId = owner.id
+  }
+
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
+  let adminSupabase = null
+  if (serviceRoleKey) {
+    adminSupabase = createSupabaseAdmin(process.env.NEXT_PUBLIC_SUPABASE_URL, serviceRoleKey)
+  } else {
+    // If no service role key is provided, we still proceed but some operations may fail due to RLS.
+    console.warn('No SUPABASE_SERVICE_ROLE_KEY found — server admin operations may be restricted')
+  }
 
   const arenaName = formData.get('arenaName')
   const price = Number(formData.get('price') || 0)
@@ -23,20 +44,30 @@ async function addArenaAction(formData) {
   const files = formData.getAll('files')
   const imageUrls = []
 
-  // Upload each image to Supabase Storage
+  // Upload each image to Supabase Storage. Use the admin client if available (required when RLS blocks anon uploads).
+  const storageClient = adminSupabase || supabase
   for (const file of files) {
     if (!file || typeof file === 'string') continue
-    const { data, error } = await supabase.storage
-      .from('arena-images')
+    const bucketName = 'arenaImages'
+    const { data, error } = await storageClient.storage
+      .from(bucketName)
       .upload(`public/${Date.now()}-${file.name}`, file, {
         cacheControl: '3600',
         upsert: false,
       })
-    if (error) throw new Error(error.message)
-    const { data: urlData } = supabase.storage
-      .from('arena-images')
-      .getPublicUrl(data.path)
-    imageUrls.push(urlData.publicUrl)
+    if (error) {
+      // surface a clearer message for RLS/permission issues
+      throw new Error(`Storage upload failed: ${error.message || JSON.stringify(error)}. Ensure the bucket exists and the server has permission to upload (use SUPABASE_SERVICE_ROLE_KEY for server uploads or make the bucket public).`)
+    }
+    // getPublicUrl returns an object with shape { data: { publicUrl } }
+    const urlResult = storageClient.storage.from(bucketName).getPublicUrl(data.path)
+    const publicUrl = (urlResult && urlResult.data && urlResult.data.publicUrl) || urlResult?.publicUrl || ''
+    if (!publicUrl) {
+      // If bucket is private, consider creating a signed URL when rendering, or use createSignedUrl here.
+      imageUrls.push('')
+    } else {
+      imageUrls.push(publicUrl)
+    }
   }
 
   // Validate time
@@ -47,9 +78,32 @@ async function addArenaAction(formData) {
   if (cMin <= oMin) throw new Error('Closing time must be after opening time')
 
   // Save data to Supabase DB
-  const { error } = await supabase.from('arenas').insert([
-    {
+  // Try to insert into Supabase table first. If that fails (missing table, RLS, or permissions), fall back to Prisma.
+  const dbClient = adminSupabase || supabase
+  try {
+    // Create a payload that supports different schema shapes:
+    // - top-level 'name' and 'arenaDetails' (used by API normalization)
+    // - legacy snake_case fields and top-level 'images' for compatibility
+    const arenaDetailsObj = {
+      arenaName,
+      price,
+      phoneNumber,
+      address,
+      length,
+      width,
+      height,
+      openingTime,
+      closingTime,
+      description,
+      categories,
+      images: imageUrls,
+      arenaImageUrls: imageUrls,
+    }
+
+    const supPayload = {
+      name: arenaName,
       arena_name: arenaName,
+        ownerProfileId: ownerProfileId,
       price,
       phone_number: phoneNumber,
       address,
@@ -61,9 +115,47 @@ async function addArenaAction(formData) {
       description,
       categories,
       images: imageUrls,
-    },
-  ])
-  if (error) throw new Error(error.message)
+      arenaDetails: arenaDetailsObj,
+    }
+
+    // If owner profile wasn't found, abort so records aren't orphaned (Prisma fallback will also require owner)
+    if (!ownerProfileId) {
+      throw new Error('Complete owner profile first (ownerProfileId not found)')
+    }
+
+    const { error: insertError } = await dbClient.from('arenas').insert([supPayload])
+    if (insertError) throw insertError
+  } catch (err) {
+    console.warn('Supabase insert failed, falling back to Prisma:', err?.message || err)
+    // Prisma fallback: store arenaDetails as JSON in the Prisma `Arena` model
+    try {
+      if (!ownerProfileId) {
+        throw new Error('Complete owner profile first (ownerProfileId not found)')
+      }
+      await prisma.arena.create({
+        data: {
+          name: arenaName || undefined,
+          arenaDetails: {
+            arenaName,
+            price,
+            phoneNumber,
+            address,
+            length,
+            width,
+            height,
+            openingTime,
+            closingTime,
+            description,
+            categories,
+            images: imageUrls,
+          },
+          ownerProfileId: ownerProfileId,
+        },
+      })
+    } catch (pErr) {
+      throw new Error(`Failed to insert arena into Supabase and Prisma fallback failed: ${pErr?.message || JSON.stringify(pErr)}`)
+    }
+  }
 
   // Revalidate and redirect
   revalidatePath('/dashboard/arenas')
