@@ -27,22 +27,9 @@ export async function POST(request) {
       status: body.status || 'Confirmed',
     }
 
-    // Try to create; if email already exists, update that booking (one booking per email)
-    try {
-      const created = await prisma.booking.create({ data: bookingData })
-      return new Response(JSON.stringify(created), { status: 201 })
-    } catch (err) {
-      // Handle unique constraint violation (email already exists)
-      // Prisma error code for unique constraint is P2002
-      if (err?.code === 'P2002') {
-        const existing = await prisma.booking.update({
-          where: { email: bookingData.email },
-          data: bookingData,
-        })
-        return new Response(JSON.stringify(existing), { status: 200 })
-      }
-      throw err
-    }
+    // Create a new booking record (allow multiple bookings per email)
+    const created = await prisma.booking.create({ data: bookingData })
+    return new Response(JSON.stringify(created), { status: 201 })
   } catch (error) {
     console.error('Booking POST error', error)
     return new Response(JSON.stringify({ error: error.message || 'Internal error' }), { status: 500 })

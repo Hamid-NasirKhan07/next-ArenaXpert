@@ -69,7 +69,7 @@ model OwnerProfile {
 
 model Booking {
   id        String   @id @default(cuid())
-  email     String   @unique
+  email     String
   name      String?
   phone     String?
   arenaId   String

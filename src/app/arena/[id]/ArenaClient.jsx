@@ -29,7 +29,35 @@ function generateTimeSlots(openingTime, closingTime) {
 export default function ArenaClient({ id, initialArena = null }) {
   const [arena, setArena] = useState(initialArena)
   const [selectedTimeSlot, setSelectedTimeSlot] = useState('')
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10))
   const [availableTimeSlots, setAvailableTimeSlots] = useState([])
+
+  async function fetchAvailableSlotsForDate(arenaId, dateStr, arenaObj = null) {
+    try {
+      const details = (arenaObj && arenaObj.arenaDetails) || (arena && arena.arenaDetails) || {}
+      const openTime = details.openingTime || '06:00'
+      const closeTime = details.closingTime || '22:00'
+      const slots = generateTimeSlots(openTime, closeTime)
+
+      // Fetch bookings for this arena and date from server
+      const url = `/api/bookings?arenaId=${encodeURIComponent(arenaId)}&date=${encodeURIComponent(dateStr)}`
+      const res = await fetch(url)
+      if (!res.ok) {
+        console.error('Failed to fetch bookings for date', dateStr)
+        setAvailableTimeSlots(slots)
+        return
+      }
+      const bookings = await res.json()
+      const bookedSlots = Array.isArray(bookings) ? bookings.map((b) => b.timeSlot) : []
+      const filtered = slots.filter((s) => !bookedSlots.includes(s))
+      setAvailableTimeSlots(filtered)
+    } catch (err) {
+      console.error('Error fetching available slots:', err)
+      const openTime = arena.arenaDetails?.openingTime || '06:00'
+      const closeTime = arena.arenaDetails?.closingTime || '22:00'
+      setAvailableTimeSlots(generateTimeSlots(openTime, closeTime))
+    }
+  }
 
   useEffect(() => {
     let mounted = true
@@ -44,15 +72,8 @@ export default function ArenaClient({ id, initialArena = null }) {
         const data = await response.json()
         if (!mounted) return
         setArena(data)
-
-        const openTime = data.arenaDetails?.openingTime || '06:00'
-        const closeTime = data.arenaDetails?.closingTime || '22:00'
-        const slots = generateTimeSlots(openTime, closeTime)
-
-        const bookings = JSON.parse(localStorage.getItem('bookings')) || []
-        const bookedSlots = bookings.filter((b) => b.arenaId === id).map((b) => b.timeSlot)
-        const filteredSlots = slots.filter((slot) => !bookedSlots.includes(slot))
-        setAvailableTimeSlots(filteredSlots)
+        // fetch available slots for the selected date (pass arena details to avoid race)
+        fetchAvailableSlotsForDate(data._id || id, selectedDate, data)
       } catch (error) {
         console.error('Error fetching arena data:', error)
       }
@@ -62,18 +83,19 @@ export default function ArenaClient({ id, initialArena = null }) {
     if (!arena && id) {
       fetchArena()
     } else if (arena) {
-      // initialize slots from provided arena
-      const openTime = arena.arenaDetails?.openingTime || '06:00'
-      const closeTime = arena.arenaDetails?.closingTime || '22:00'
-      const slots = generateTimeSlots(openTime, closeTime)
-      const bookings = JSON.parse(localStorage.getItem('bookings')) || []
-      const bookedSlots = bookings.filter((b) => b.arenaId === (arena._id || id)).map((b) => b.timeSlot)
-      const filteredSlots = slots.filter((slot) => !bookedSlots.includes(slot))
-      setAvailableTimeSlots(filteredSlots)
+      // initialize slots from provided arena for the selected date
+      fetchAvailableSlotsForDate(arena._id || id, selectedDate, arena)
     }
 
     return () => { mounted = false }
   }, [id, arena])
+
+  // Whenever the selected date changes (or arena becomes available), refresh available slots
+  useEffect(() => {
+    if (arena) {
+      fetchAvailableSlotsForDate(arena._id || id, selectedDate)
+    }
+  }, [selectedDate, arena, id])
 
   if (!arena) {
     return (
@@ -159,6 +181,13 @@ export default function ArenaClient({ id, initialArena = null }) {
                     </p>
                   </div>
                   <div className={`product_variant size ${styles['product-variant-size'] || ''}`}>
+                    <label style={{ display: 'block', marginBottom: '6px' }}><strong>Select Date:</strong></label>
+                    <input
+                      type="date"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      style={{ marginBottom: '10px', padding: '6px', display: 'block' }}
+                    />
                     <label><strong>Select Time Slot:</strong></label>
                     <select
                       id="timeSlots"
@@ -196,7 +225,7 @@ export default function ArenaClient({ id, initialArena = null }) {
                         arenaId: arena._id || arena.id || id,
                         arenaName: arena.arenaDetails.arenaName,
                         timeSlot: selectedTimeSlot,
-                        date: new Date().toLocaleDateString(),
+                        date: selectedDate,
                         status: 'Confirmed',
                         user: {
                           email: user.email,
@@ -212,8 +241,9 @@ export default function ArenaClient({ id, initialArena = null }) {
                         })
                         if (response.ok) {
                           alert('Booking successful!')
-                          setAvailableTimeSlots(availableTimeSlots.filter((slot) => slot !== selectedTimeSlot))
                           setSelectedTimeSlot('')
+                          // refresh slots for the selected date so the booked slot is removed for everyone
+                          fetchAvailableSlotsForDate(arena._id || arena.id || id, selectedDate)
                         } else {
                           const errorData = await response.json()
                           alert('Booking failed: ' + (errorData.error || JSON.stringify(errorData)))
